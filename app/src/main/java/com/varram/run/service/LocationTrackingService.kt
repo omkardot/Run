@@ -12,8 +12,10 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.varram.run.RunningTrackerApplication
 import com.varram.run.core.location.LocationTracker
+import com.varram.run.data.local.database.RunningDatabase
 import com.varram.run.data.model.LocationData
-import com.varram.run.feature.home.presentation.LocationRepository
+import com.varram.run.data.repository.RunningRepository
+import com.varram.run.feature.tracking.presentation.LocationRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -29,8 +31,9 @@ class LocationTrackingService : Service() {
         CoroutineScope(
             SupervisorJob() + Dispatchers.Default
         )
-    private lateinit var locationRepository: LocationRepository
+
     private lateinit var locationTracker: LocationTracker
+    private lateinit var runningRepository: RunningRepository
 
     private var trackingJob: Job? = null
 
@@ -39,13 +42,45 @@ class LocationTrackingService : Service() {
 
         locationTracker =
             LocationTracker(applicationContext)
-        locationRepository =
+
+        runningRepository =
             (application as RunningTrackerApplication)
-                .locationRepository
+                .runningRepository
 
         createNotificationChannel()
     }
+    private fun createNotification(): Notification {
 
+        return NotificationCompat.Builder(
+            this,
+            CHANNEL_ID
+        )
+            .setContentTitle("Run in progress")
+            .setContentText("Tracking your location")
+            .setSmallIcon(android.R.drawable.ic_menu_mylocation)
+            .setOngoing(true)
+            .setCategory(NotificationCompat.CATEGORY_SERVICE)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .build()
+    }
+    private fun createNotificationChannel() {
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+
+            val channel = NotificationChannel(
+                CHANNEL_ID,
+                "Running Tracker",
+                NotificationManager.IMPORTANCE_LOW
+            ).apply {
+                description = "Shows when running location tracking is active"
+            }
+
+            val notificationManager =
+                getSystemService(NotificationManager::class.java)
+
+            notificationManager.createNotificationChannel(channel)
+        }
+    }
     override fun onStartCommand(
         intent: Intent?,
         flags: Int,
@@ -68,7 +103,6 @@ class LocationTrackingService : Service() {
 
     private fun startTracking() {
 
-        // Prevent duplicate collectors
         if (trackingJob?.isActive == true) {
             return
         }
@@ -82,6 +116,9 @@ class LocationTrackingService : Service() {
 
             try {
 
+                // Create ONE run
+                runningRepository.startRun()
+
                 locationTracker
                     .locationUpdates()
                     .collect { location ->
@@ -90,8 +127,6 @@ class LocationTrackingService : Service() {
                     }
 
             } catch (e: CancellationException) {
-
-                // Expected when tracking stops
 
                 throw e
 
@@ -105,43 +140,13 @@ class LocationTrackingService : Service() {
             }
         }
     }
-    private fun createNotificationChannel() {
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-
-            val channel = NotificationChannel(
-                CHANNEL_ID,
-                "Running Tracker",
-                NotificationManager.IMPORTANCE_LOW
-            ).apply {
-                description = "Shows when running location tracking is active"
-            }
-
-            val notificationManager =
-                getSystemService(NotificationManager::class.java)
-
-            notificationManager.createNotificationChannel(channel)
-        }
-    }
-    private fun createNotification(): Notification {
-
-        return NotificationCompat.Builder(
-            this,
-            CHANNEL_ID
-        )
-            .setContentTitle("Run in progress")
-            .setContentText("Tracking your location")
-            .setSmallIcon(android.R.drawable.ic_menu_mylocation)
-            .setOngoing(true)
-            .setCategory(NotificationCompat.CATEGORY_SERVICE)
-            .setPriority(NotificationCompat.PRIORITY_LOW)
-            .build()
-    }
-    private fun handleLocation(
+    private suspend fun handleLocation(
         location: LocationData
     ) {
-        locationRepository.updateLocation(location)
 
+        runningRepository.saveLocation(location)
+        runningRepository.updateLocation(location)
         Log.d(
             TAG,
             """
@@ -155,9 +160,6 @@ class LocationTrackingService : Service() {
             timestamp=${location.timestamp}
             """.trimIndent()
         )
-
-        // Later:
-        // repository.processLocation(location)
     }
 
     private fun stopTracking() {
@@ -165,12 +167,18 @@ class LocationTrackingService : Service() {
         trackingJob?.cancel()
         trackingJob = null
 
+        serviceScope.launch {
+            runningRepository.finishRun()
+        }
+
         stopForeground(
             STOP_FOREGROUND_REMOVE
         )
 
         stopSelf()
     }
+
+    // notification methods...
 
     override fun onDestroy() {
 
@@ -195,8 +203,10 @@ class LocationTrackingService : Service() {
 
         private const val TAG =
             "LocationTrackingService"
+
         private const val CHANNEL_ID =
             "running_tracker_channel"
+
         private const val NOTIFICATION_ID =
             1001
     }

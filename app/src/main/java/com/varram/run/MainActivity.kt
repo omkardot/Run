@@ -27,7 +27,7 @@ class MainActivity : ComponentActivity() {
 
         val repository =
             (application as RunningTrackerApplication)
-                .locationRepository
+                .runningRepository
         val viewModel = RunningTrackerViewModel(repository)
 
         setContent {
@@ -71,7 +71,8 @@ class MainActivity : ComponentActivity() {
                 }
 
                 MainScreen(
-                    viewModel = viewModel
+                    viewModel = viewModel,
+                    context
                 )
             }
         }

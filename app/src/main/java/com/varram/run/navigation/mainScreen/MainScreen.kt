@@ -1,5 +1,6 @@
 package com.varram.run.navigation.mainScreen
 
+import android.content.Context
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -14,10 +15,9 @@ import androidx.navigation.compose.rememberNavController
 import com.varram.run.feature.history.presentation.HistoryScreen
 import com.varram.run.feature.home.presentation.RunningTrackerDebugScreen
 import com.varram.run.feature.home.presentation.RunningTrackerViewModel
-
 @Composable
 fun MainScreen(
-    viewModel: RunningTrackerViewModel
+    viewModel: RunningTrackerViewModel,context: Context
 ) {
     val navController = rememberNavController()
 
@@ -49,7 +49,6 @@ fun MainScreen(
         ) {
 
             composable(BottomNavItem.Home.route) {
-                val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
                 RunningTrackerDebugScreen(
                     latitude = uiState.latitude,
@@ -58,6 +57,11 @@ fun MainScreen(
                     isTracking = uiState.isTracking,
                     onToggleTracking = {
 
+                        if (uiState.isTracking) {
+                            viewModel.startTracking(context)
+                        } else {
+                            viewModel.stopTracking(context)
+                        }
                     }
                 )
             }

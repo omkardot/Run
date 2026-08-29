@@ -11,17 +11,5 @@ data class RunningTrackerUiState(
     val latitude: Double? = null,
     val longitude: Double? = null,
     val accuracy: Float? = null,
-    val isTracking: Boolean = false
+    var isTracking: Boolean = false
 )
-class LocationRepository {
-
-    private val _currentLocation =
-        MutableStateFlow<LocationData?>(null)
-
-    val currentLocation: StateFlow<LocationData?> =
-        _currentLocation.asStateFlow()
-
-    fun updateLocation(location: LocationData) {
-        _currentLocation.value = location
-    }
-}
