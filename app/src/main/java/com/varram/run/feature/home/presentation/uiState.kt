@@ -2,6 +2,7 @@ package com.varram.run.feature.home.presentation
 
 import com.varram.run.core.location.LocationTracker
 import com.varram.run.data.model.LocationData
+import com.varram.run.data.model.RoutePoint
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -11,5 +12,8 @@ data class RunningTrackerUiState(
     val latitude: Double? = null,
     val longitude: Double? = null,
     val accuracy: Float? = null,
-    var isTracking: Boolean = false
+    val isTracking: Boolean = false,
+    val distanceMeters: Double = 0.0,
+    val elapsedTimeMillis: Long = 0L,
+    val routePoints: List<RoutePoint> = emptyList()
 )

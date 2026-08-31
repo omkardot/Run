@@ -1,6 +1,7 @@
 package com.varram.run.data.repository
 
 import android.util.Log
+import com.varram.run.data.domain.tracker.LocationFilter
 import com.varram.run.data.local.dao.LocationPointDao
 import com.varram.run.data.local.dao.RunDao
 import com.varram.run.data.local.entity.LocationPointEntity
@@ -20,10 +21,13 @@ class RunningRepository(
 ) {
     private val _runningState =
         MutableStateFlow(RunningState())
-
+    private val locationFilter = LocationFilter()
     val runningState: StateFlow<RunningState> =
         _runningState.asStateFlow()
 
+    fun updateRunningState(state: RunningState) {
+        _runningState.value = state
+    }
     fun updateLocation(location: LocationData) {
 
         _runningState.update {
@@ -44,12 +48,18 @@ class RunningRepository(
 
         val runId = UUID.randomUUID().toString()
 
+        locationFilter.reset()
         val run = RunEntity(
             runId = runId,
             startTime = System.currentTimeMillis(),
             status = RunStatus.ACTIVE
         )
 
+        _runningState.update {
+            it.copy(
+                isTracking = true
+            )
+        }
         runDao.insertRun(run)
 
         activeRunId = runId
@@ -86,7 +96,11 @@ class RunningRepository(
             endTime = System.currentTimeMillis(),
             status = RunStatus.COMPLETED
         )
-
+        _runningState.update {
+            it.copy(
+                isTracking = false
+            )
+        }
         activeRunId = null
     }
 }

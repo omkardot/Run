@@ -33,9 +33,14 @@ class MainActivity : ComponentActivity() {
         setContent {
             RunTheme {
                 val context = LocalContext.current
+                MainScreen(
+                    viewModel = viewModel,
+                    context
+                )
+
 
                 // Launcher to handle the system permission dialog response
-                val permissionLauncher = rememberLauncherForActivityResult(
+                /*val permissionLauncher = rememberLauncherForActivityResult(
                     contract = ActivityResultContracts.RequestMultiplePermissions()
                 ) { permissions ->
                     val fineGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
@@ -68,12 +73,9 @@ class MainActivity : ComponentActivity() {
                             )
                         )
                     }
-                }
+                }*/
 
-                MainScreen(
-                    viewModel = viewModel,
-                    context
-                )
+
             }
         }
     }

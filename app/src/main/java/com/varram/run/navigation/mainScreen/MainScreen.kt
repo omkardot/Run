@@ -55,9 +55,10 @@ fun MainScreen(
                     longitude = uiState.longitude,
                     accuracy = uiState.accuracy,
                     isTracking = uiState.isTracking,
+                    routePoints = uiState.routePoints,
                     onToggleTracking = {
 
-                        if (uiState.isTracking) {
+                        if (!uiState.isTracking) {
                             viewModel.startTracking(context)
                         } else {
                             viewModel.stopTracking(context)

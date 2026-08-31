@@ -31,22 +31,29 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import com.varram.run.data.model.RoutePoint
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
+import org.osmdroid.views.overlay.Polyline
+
 @Composable
 fun RunningTrackerDebugScreen(
     latitude: Double?,
     longitude: Double?,
     accuracy: Float?,
     isTracking: Boolean,
+    routePoints: List<RoutePoint>,
     onToggleTracking: () -> Unit
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
 
-    // Initialize MapView once
+    // -----------------------------
+    // MAP
+    // -----------------------------
+
     val mapView = remember {
         MapView(context).apply {
             setTileSource(TileSourceFactory.MAPNIK)
@@ -55,29 +62,80 @@ fun RunningTrackerDebugScreen(
         }
     }
 
-    // Reuse a single Marker instance across recompositions
+    // -----------------------------
+    // USER MARKER
+    // -----------------------------
+
     val userMarker = remember {
         Marker(mapView).apply {
             title = "📍 YOU"
-            setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+            setAnchor(
+                Marker.ANCHOR_CENTER,
+                Marker.ANCHOR_BOTTOM
+            )
         }
     }
 
-    // Bind MapView lifecycle properly to parent LifecycleOwner
-    DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            when (event) {
-                Lifecycle.Event.ON_RESUME -> mapView.onResume()
-                Lifecycle.Event.ON_PAUSE -> mapView.onPause()
-                else -> {}
-            }
+    // -----------------------------
+    // RUNNING ROUTE POLYLINE
+    // -----------------------------
+
+    val routePolyline = remember {
+        Polyline(mapView).apply {
+            width = 8f
         }
+    }
+
+    // -----------------------------
+    // MAP LIFECYCLE
+    // -----------------------------
+
+    DisposableEffect(lifecycleOwner) {
+
+        val observer =
+            LifecycleEventObserver { _, event ->
+
+                when (event) {
+
+                    Lifecycle.Event.ON_RESUME -> {
+                        mapView.onResume()
+                    }
+
+                    Lifecycle.Event.ON_PAUSE -> {
+                        mapView.onPause()
+                    }
+
+                    else -> Unit
+                }
+            }
+
         lifecycleOwner.lifecycle.addObserver(observer)
+
         onDispose {
             lifecycleOwner.lifecycle.removeObserver(observer)
             mapView.onDetach()
         }
     }
+
+    // -----------------------------
+    // UPDATE ROUTE
+    // -----------------------------
+    LaunchedEffect(routePoints) {
+
+        val points = routePoints.map {
+            GeoPoint(
+                it.latitude,
+                it.longitude
+            )
+        }
+
+        routePolyline.setPoints(points)
+
+        mapView.invalidate()
+    }
+    // -----------------------------
+    // UI
+    // -----------------------------
 
     Column(
         modifier = Modifier
@@ -86,65 +144,110 @@ fun RunningTrackerDebugScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceBetween
     ) {
+
         Text(
             text = "Running Tracker",
             style = MaterialTheme.typography.headlineMedium
         )
 
-        // Map View Container using AndroidView update lambda
+        // -----------------------------
+        // MAP
+        // -----------------------------
+
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .weight(1f)
                 .padding(vertical = 16.dp)
         ) {
+
             AndroidView(
                 factory = { mapView },
+
                 modifier = Modifier.fillMaxSize(),
+
                 update = { view ->
-                    if (latitude != null && longitude != null) {
-                        val point = GeoPoint(latitude, longitude)
+
+                    // Add polyline once
+                    if (!view.overlays.contains(routePolyline)) {
+                        view.overlays.add(routePolyline)
+                    }
+
+                    // Update marker
+                    if (
+                        latitude != null &&
+                        longitude != null
+                    ) {
+
+                        val point = GeoPoint(
+                            latitude,
+                            longitude
+                        )
+
                         userMarker.position = point
 
                         if (!view.overlays.contains(userMarker)) {
                             view.overlays.add(userMarker)
                         }
 
+                        // Follow current location
                         view.controller.animateTo(point)
-                        view.invalidate()
                     }
+
+                    view.invalidate()
                 }
             )
         }
 
-        // Location Telemetry Output
+        // -----------------------------
+        // TELEMETRY
+        // -----------------------------
+
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(bottom = 16.dp),
             horizontalAlignment = Alignment.Start
         ) {
+
             Text(
-                text = "Latitude: ${latitude ?: "N/A"}",
+                text =
+                    "Latitude: ${latitude ?: "N/A"}",
                 fontFamily = FontFamily.Monospace
             )
+
             Text(
-                text = "Longitude: ${longitude ?: "N/A"}",
+                text =
+                    "Longitude: ${longitude ?: "N/A"}",
                 fontFamily = FontFamily.Monospace
             )
+
             Text(
-                text = "Accuracy: ${accuracy?.let { "${it}m" } ?: "N/A"}",
+                text =
+                    "Accuracy: ${
+                        accuracy?.let { "${it}m" }
+                            ?: "N/A"
+                    }",
                 fontFamily = FontFamily.Monospace
             )
         }
 
-        // Action Trigger
+        // -----------------------------
+        // START / STOP
+        // -----------------------------
+
         Button(
             onClick = onToggleTracking,
             modifier = Modifier.fillMaxWidth()
         ) {
+
             Text(
-                text = if (isTracking) "[ STOP RUN ]" else "[ START RUN ]",
+                text =
+                    if (isTracking) {
+                        "[ STOP RUN ]"
+                    } else {
+                        "[ START RUN ]"
+                    },
                 fontFamily = FontFamily.Monospace
             )
         }

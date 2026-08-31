@@ -1,5 +1,7 @@
 package com.varram.run.data.model
 
+import org.osmdroid.util.GeoPoint
+
 data class LocationData(
     val latitude: Double,
     val longitude: Double,
@@ -20,6 +22,12 @@ data class RunningSession(
 data class RunningState(
     val isTracking: Boolean = false,
     val currentLocation: LocationData? = null,
-    val route: List<LocationData> = emptyList(),
-    val distanceMeters: Double = 0.0
+    val distanceMeters: Double = 0.0,
+    val elapsedTimeMillis: Long = 0L,
+    val routePoints: List<RoutePoint> = emptyList()
+)
+
+data class RoutePoint(
+    val latitude: Double,
+    val longitude: Double
 )

@@ -12,6 +12,8 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.varram.run.RunningTrackerApplication
 import com.varram.run.core.location.LocationTracker
+import com.varram.run.data.domain.RunningTrackerEngine
+import com.varram.run.data.domain.tracker.LocationFilter
 import com.varram.run.data.local.database.RunningDatabase
 import com.varram.run.data.model.LocationData
 import com.varram.run.data.repository.RunningRepository
@@ -34,7 +36,9 @@ class LocationTrackingService : Service() {
 
     private lateinit var locationTracker: LocationTracker
     private lateinit var runningRepository: RunningRepository
+    private lateinit var trackerEngine: RunningTrackerEngine
 
+    private val locationFilter = LocationFilter()
     private var trackingJob: Job? = null
 
     override fun onCreate() {
@@ -46,7 +50,9 @@ class LocationTrackingService : Service() {
         runningRepository =
             (application as RunningTrackerApplication)
                 .runningRepository
-
+        trackerEngine = RunningTrackerEngine(
+            locationFilter = LocationFilter()
+        )
         createNotificationChannel()
     }
     private fun createNotification(): Notification {
@@ -140,13 +146,24 @@ class LocationTrackingService : Service() {
             }
         }
     }
-
     private suspend fun handleLocation(
         location: LocationData
     ) {
 
+        val state =
+            trackerEngine.processLocation(location)
+                ?: return
+
+        runningRepository.updateRunningState(state)
         runningRepository.saveLocation(location)
         runningRepository.updateLocation(location)
+
+        Log.d(
+            TAG,
+            "Location accepted: " +
+                    "${location.latitude}, " +
+                    "${location.longitude}"
+        )
         Log.d(
             TAG,
             """
@@ -162,11 +179,11 @@ class LocationTrackingService : Service() {
         )
     }
 
+
     private fun stopTracking() {
 
         trackingJob?.cancel()
         trackingJob = null
-
         serviceScope.launch {
             runningRepository.finishRun()
         }

@@ -29,7 +29,10 @@ class RunningTrackerViewModel(
                     latitude = state.currentLocation?.latitude,
                     longitude = state.currentLocation?.longitude,
                     accuracy = state.currentLocation?.accuracy,
-                    isTracking = state.isTracking
+                    isTracking = state.isTracking,
+                    distanceMeters = state.distanceMeters,
+                    elapsedTimeMillis = state.elapsedTimeMillis,
+                    routePoints = state.routePoints
                 )
             }
             .stateIn(
