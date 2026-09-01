@@ -12,23 +12,15 @@ import androidx.room.PrimaryKey
     ]
 )
 data class LocationPointEntity(
-
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
 
     val runId: String,
 
     val latitude: Double,
-
     val longitude: Double,
-
     val accuracy: Float,
-
     val speed: Float,
-
-    val bearing: Float,
-
     val altitude: Double,
-
     val timestamp: Long
 )

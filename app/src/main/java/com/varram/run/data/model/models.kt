@@ -24,6 +24,7 @@ data class RunningState(
     val currentLocation: LocationData? = null,
     val distanceMeters: Double = 0.0,
     val elapsedTimeMillis: Long = 0L,
+    val paceSecondsPerKm: Double? = null,
     val routePoints: List<RoutePoint> = emptyList()
 )
 

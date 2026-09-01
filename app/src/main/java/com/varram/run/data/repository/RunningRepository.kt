@@ -9,6 +9,7 @@ import com.varram.run.data.local.entity.RunEntity
 import com.varram.run.data.local.entity.RunStatus
 import com.varram.run.data.model.LocationData
 import com.varram.run.data.model.RunningState
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -36,12 +37,6 @@ class RunningRepository(
             )
         }
     }
-    init {
-        Log.d(
-            "RunningRepository",
-            "Repository instance: ${System.identityHashCode(this)}"
-        )
-    }
     private var activeRunId: String? = null
 
     suspend fun startRun(): String {
@@ -66,7 +61,9 @@ class RunningRepository(
 
         return runId
     }
-
+    fun getCompletedRuns(): Flow<List<RunEntity>> {
+        return runDao.getRunsByStatus(RunStatus.COMPLETED)
+    }
     suspend fun saveLocation(
         location: LocationData
     ) {
@@ -79,22 +76,34 @@ class RunningRepository(
             longitude = location.longitude,
             accuracy = location.accuracy,
             speed = location.speed,
-            bearing = location.bearing,
             altitude = location.altitude,
             timestamp = location.timestamp
         )
 
         locationPointDao.insertPoint(entity)
     }
-
+     fun getRun(
+        runId: String
+    ): Flow<RunEntity?> {
+        return runDao.getRun(runId)
+    }
+    fun getLocationPoints(
+        runId: String
+    ): Flow<List<LocationPointEntity>> {
+        return locationPointDao.getPointsForRun(runId)
+    }
     suspend fun finishRun() {
 
         val runId = activeRunId ?: return
 
+        val finalState = _runningState.value
         runDao.finishRun(
             runId = runId,
             endTime = System.currentTimeMillis(),
-            status = RunStatus.COMPLETED
+            status = RunStatus.COMPLETED,
+            durationMillis = finalState.elapsedTimeMillis,
+            distanceMeters = finalState.distanceMeters,
+            avgPaceSecondsPerKm = finalState.paceSecondsPerKm
         )
         _runningState.update {
             it.copy(

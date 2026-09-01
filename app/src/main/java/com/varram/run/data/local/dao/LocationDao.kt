@@ -18,7 +18,14 @@ interface LocationPointDao {
     suspend fun insertPoints(
         points: List<LocationPointEntity>
     )
-
+    @Query("""
+    SELECT * FROM location_points
+    WHERE runId = :runId
+    ORDER BY timestamp ASC
+""")
+    fun getPointsForRun(
+        runId: String
+    ): Flow<List<LocationPointEntity>>
     @Query("""
         SELECT * FROM location_points
         WHERE runId = :runId

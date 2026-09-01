@@ -45,6 +45,8 @@ fun RunningTrackerDebugScreen(
     accuracy: Float?,
     isTracking: Boolean,
     routePoints: List<RoutePoint>,
+    distance: Double?,
+    paceperSec: Double?,
     onToggleTracking: () -> Unit
 ) {
     val context = LocalContext.current
@@ -226,6 +228,22 @@ fun RunningTrackerDebugScreen(
                 text =
                     "Accuracy: ${
                         accuracy?.let { "${it}m" }
+                            ?: "N/A"
+                    }",
+                fontFamily = FontFamily.Monospace
+            )
+            Text(
+                text =
+                    "Distance: ${
+                        distance?.let { "${it}m" }
+                            ?: "N/A"
+                    }",
+                fontFamily = FontFamily.Monospace
+            )
+            Text(
+                text =
+                    "Pace/sec ${
+                        paceperSec?.let { "${it}/sec" }
                             ?: "N/A"
                     }",
                 fontFamily = FontFamily.Monospace

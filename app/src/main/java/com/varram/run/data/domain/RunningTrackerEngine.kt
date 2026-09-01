@@ -120,17 +120,6 @@ class RunningTrackerEngine(
         return createRunningState(location)
     }
 
-    fun stop() {
-
-        previousLocation = null
-        totalDistanceMeters = 0.0
-        startTimeMillis = null
-
-        routePoints.clear()
-
-        locationFilter.reset()
-    }
-
     private fun createRunningState(
         location: LocationData
     ): RunningState {
@@ -139,16 +128,37 @@ class RunningTrackerEngine(
             SystemClock.elapsedRealtime() -
                     (startTimeMillis
                         ?: SystemClock.elapsedRealtime())
-
+        val pace = calculatePace(
+            distanceMeters = totalDistanceMeters,
+            elapsedTimeMillis = elapsedTimeMillis
+        )
         return RunningState(
             isTracking = true,
             currentLocation = location,
             distanceMeters = totalDistanceMeters,
             elapsedTimeMillis = elapsedTimeMillis,
+            paceSecondsPerKm = pace,
             routePoints = routePoints.toList()
         )
     }
+    private fun calculatePace(
+        distanceMeters: Double,
+        elapsedTimeMillis: Long
+    ): Double? {
 
+        if (distanceMeters < 10.0) {
+            return null
+        }
+
+        if (elapsedTimeMillis <= 0) {
+            return null
+        }
+
+        val distanceKm = distanceMeters / 1000.0
+        val elapsedSeconds = elapsedTimeMillis / 1000.0
+
+        return elapsedSeconds / distanceKm
+    }
     private fun calculateDistance(
         previous: LocationData,
         current: LocationData

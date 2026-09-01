@@ -18,7 +18,7 @@ import com.varram.run.data.local.entity.RunEntity
         RunEntity::class,
         LocationPointEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = true
 )
 @TypeConverters(RunStatusConverter::class)

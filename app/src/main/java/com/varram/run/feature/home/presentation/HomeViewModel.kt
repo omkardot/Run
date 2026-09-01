@@ -5,9 +5,11 @@ import android.content.Intent
 import android.util.Log
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.varram.run.data.local.entity.RunStatus
 import com.varram.run.data.repository.RunningRepository
+import com.varram.run.feature.history.presentation.HistoryViewModel
 import com.varram.run.feature.tracking.presentation.LocationRepository
 import com.varram.run.service.LocationTrackingService
 import kotlinx.coroutines.flow.SharingStarted
@@ -31,6 +33,7 @@ class RunningTrackerViewModel(
                     accuracy = state.currentLocation?.accuracy,
                     isTracking = state.isTracking,
                     distanceMeters = state.distanceMeters,
+                    paceSecondsPerKm = state.paceSecondsPerKm,
                     elapsedTimeMillis = state.elapsedTimeMillis,
                     routePoints = state.routePoints
                 )
@@ -71,3 +74,4 @@ class RunningTrackerViewModel(
         )
     }
 }
+
