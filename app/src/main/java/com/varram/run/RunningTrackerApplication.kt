@@ -6,7 +6,6 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.varram.run.data.local.database.RunningDatabase
 import com.varram.run.data.repository.RunningRepository
-import com.varram.run.feature.tracking.presentation.LocationRepository
 
 class RunningTrackerApplication : Application() {
 

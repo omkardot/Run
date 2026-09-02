@@ -1,5 +1,6 @@
 package com.varram.run.data.model
 
+import com.varram.run.data.local.entity.RunStatus
 import org.osmdroid.util.GeoPoint
 
 data class LocationData(
@@ -21,6 +22,7 @@ data class RunningSession(
 
 data class RunningState(
     val isTracking: Boolean = false,
+    val isPaused: Boolean = false,
     val currentLocation: LocationData? = null,
     val distanceMeters: Double = 0.0,
     val elapsedTimeMillis: Long = 0L,

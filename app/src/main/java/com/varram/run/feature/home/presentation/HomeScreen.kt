@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.ripple.R
 import androidx.compose.material3.Button
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -31,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import com.varram.run.data.local.entity.RunStatus
 import com.varram.run.data.model.RoutePoint
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
@@ -47,6 +49,8 @@ fun RunningTrackerDebugScreen(
     routePoints: List<RoutePoint>,
     distance: Double?,
     paceperSec: Double?,
+    isPaused: Boolean,
+    onTogglePause: () -> Unit,
     onToggleTracking: () -> Unit
 ) {
     val context = LocalContext.current
@@ -250,24 +254,46 @@ fun RunningTrackerDebugScreen(
             )
         }
 
-        // -----------------------------
-        // START / STOP
-        // -----------------------------
+        if (isTracking || isPaused) {
 
-        Button(
-            onClick = onToggleTracking,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-
-            Text(
-                text =
-                    if (isTracking) {
-                        "[ STOP RUN ]"
+            // PAUSE / RESUME
+            Button(
+                onClick = onTogglePause,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = if (isPaused) {
+                        "[ RESUME RUN ]"
                     } else {
-                        "[ START RUN ]"
+                        "[ PAUSE RUN ]"
                     },
-                fontFamily = FontFamily.Monospace
-            )
+                    fontFamily = FontFamily.Monospace
+                )
+            }
+
+            // STOP
+            Button(
+                onClick = onToggleTracking,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = "[ STOP RUN ]",
+                    fontFamily = FontFamily.Monospace
+                )
+            }
+
+        } else {
+
+            // START
+            Button(
+                onClick = onToggleTracking,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = "[ START RUN ]",
+                    fontFamily = FontFamily.Monospace
+                )
+            }
         }
     }
 }

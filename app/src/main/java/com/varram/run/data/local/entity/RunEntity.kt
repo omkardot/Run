@@ -18,7 +18,8 @@ data class RunEntity(
     val isCompleted: Boolean = false
 )
 enum class RunStatus {
-    ACTIVE,
-    COMPLETED,
-    CANCELLED
+    IDLE,
+    RUNNING,
+    PAUSED,
+    COMPLETED
 }

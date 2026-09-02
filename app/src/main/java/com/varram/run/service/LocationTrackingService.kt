@@ -17,7 +17,6 @@ import com.varram.run.data.domain.tracker.LocationFilter
 import com.varram.run.data.local.database.RunningDatabase
 import com.varram.run.data.model.LocationData
 import com.varram.run.data.repository.RunningRepository
-import com.varram.run.feature.tracking.presentation.LocationRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -99,19 +98,47 @@ class LocationTrackingService : Service() {
                 startTracking()
             }
 
+            ACTION_PAUSE_TRACKING -> {
+                pauseTracking()
+            }
+
+            ACTION_RESUME_TRACKING -> {
+                resumeTracking()
+            }
+
             ACTION_STOP_TRACKING -> {
                 stopTracking()
             }
         }
-
         return START_STICKY
     }
+    private fun pauseTracking() {
 
+        val newState = trackerEngine.pause()
+        runningRepository.updateRunningState(newState)
+
+        Log.d(
+            TAG,
+            "Run paused"
+        )
+    }
+    private fun resumeTracking() {
+
+        val newState = trackerEngine.resume()
+        runningRepository.updateRunningState(newState)
+
+        Log.d(
+            TAG,
+            "Run resumed"
+        )
+    }
     private fun startTracking() {
 
         if (trackingJob?.isActive == true) {
             return
         }
+
+        trackerEngine.start()
 
         startForeground(
             NOTIFICATION_ID,
@@ -184,15 +211,27 @@ class LocationTrackingService : Service() {
 
         trackingJob?.cancel()
         trackingJob = null
+
         serviceScope.launch {
-            runningRepository.finishRun()
+
+            try {
+                runningRepository.finishRun()
+
+                stopForeground(
+                    STOP_FOREGROUND_REMOVE
+                )
+
+                stopSelf()
+
+            } catch (e: Exception) {
+
+                Log.e(
+                    TAG,
+                    "Failed to finish run",
+                    e
+                )
+            }
         }
-
-        stopForeground(
-            STOP_FOREGROUND_REMOVE
-        )
-
-        stopSelf()
     }
 
     // notification methods...
@@ -220,7 +259,11 @@ class LocationTrackingService : Service() {
 
         private const val TAG =
             "LocationTrackingService"
+        const val ACTION_PAUSE_TRACKING =
+            "com.yourpackage.runningtracker.PAUSE_TRACKING"
 
+        const val ACTION_RESUME_TRACKING =
+            "com.yourpackage.runningtracker.RESUME_TRACKING"
         private const val CHANNEL_ID =
             "running_tracker_channel"
 

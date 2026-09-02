@@ -13,6 +13,7 @@ data class RunningTrackerUiState(
     val longitude: Double? = null,
     val accuracy: Float? = null,
     val isTracking: Boolean = false,
+    val isPaused: Boolean = false,
     val distanceMeters: Double = 0.0,
     val elapsedTimeMillis: Long = 0L,
     val paceSecondsPerKm: Double? = null,

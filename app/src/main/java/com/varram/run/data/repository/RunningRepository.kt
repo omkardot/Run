@@ -1,6 +1,10 @@
 package com.varram.run.data.repository
 
+import android.R.attr.action
+import android.content.Context
+import android.content.Intent
 import android.util.Log
+import androidx.core.content.ContextCompat
 import com.varram.run.data.domain.tracker.LocationFilter
 import com.varram.run.data.local.dao.LocationPointDao
 import com.varram.run.data.local.dao.RunDao
@@ -9,6 +13,7 @@ import com.varram.run.data.local.entity.RunEntity
 import com.varram.run.data.local.entity.RunStatus
 import com.varram.run.data.model.LocationData
 import com.varram.run.data.model.RunningState
+import com.varram.run.service.LocationTrackingService
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -29,6 +34,13 @@ class RunningRepository(
     fun updateRunningState(state: RunningState) {
         _runningState.value = state
     }
+
+    fun setIsPaused(isPaused: Boolean) {
+        _runningState.update {
+            it.copy(isPaused = isPaused)
+        }
+    }
+
     fun updateLocation(location: LocationData) {
 
         _runningState.update {
@@ -37,6 +49,7 @@ class RunningRepository(
             )
         }
     }
+
     private var activeRunId: String? = null
 
     suspend fun startRun(): String {
@@ -47,7 +60,7 @@ class RunningRepository(
         val run = RunEntity(
             runId = runId,
             startTime = System.currentTimeMillis(),
-            status = RunStatus.ACTIVE
+            status = RunStatus.RUNNING
         )
 
         _runningState.update {
@@ -61,9 +74,11 @@ class RunningRepository(
 
         return runId
     }
+
     fun getCompletedRuns(): Flow<List<RunEntity>> {
         return runDao.getRunsByStatus(RunStatus.COMPLETED)
     }
+
     suspend fun saveLocation(
         location: LocationData
     ) {
@@ -82,16 +97,19 @@ class RunningRepository(
 
         locationPointDao.insertPoint(entity)
     }
-     fun getRun(
+
+    fun getRun(
         runId: String
     ): Flow<RunEntity?> {
         return runDao.getRun(runId)
     }
+
     fun getLocationPoints(
         runId: String
     ): Flow<List<LocationPointEntity>> {
         return locationPointDao.getPointsForRun(runId)
     }
+
     suspend fun finishRun() {
 
         val runId = activeRunId ?: return
@@ -107,7 +125,8 @@ class RunningRepository(
         )
         _runningState.update {
             it.copy(
-                isTracking = false
+                isTracking = false,
+                isPaused = false
             )
         }
         activeRunId = null

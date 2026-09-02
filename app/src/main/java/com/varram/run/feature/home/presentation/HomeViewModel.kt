@@ -10,7 +10,6 @@ import androidx.lifecycle.viewModelScope
 import com.varram.run.data.local.entity.RunStatus
 import com.varram.run.data.repository.RunningRepository
 import com.varram.run.feature.history.presentation.HistoryViewModel
-import com.varram.run.feature.tracking.presentation.LocationRepository
 import com.varram.run.service.LocationTrackingService
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -32,6 +31,7 @@ class RunningTrackerViewModel(
                     longitude = state.currentLocation?.longitude,
                     accuracy = state.currentLocation?.accuracy,
                     isTracking = state.isTracking,
+                    isPaused = state.isPaused,
                     distanceMeters = state.distanceMeters,
                     paceSecondsPerKm = state.paceSecondsPerKm,
                     elapsedTimeMillis = state.elapsedTimeMillis,
@@ -56,7 +56,38 @@ class RunningTrackerViewModel(
 
         context.startService(intent)
     }
+    fun pauseTracking(context: Context) {
 
+        val intent = Intent(
+            context,
+            LocationTrackingService::class.java
+        ).apply {
+            action =
+                LocationTrackingService
+                    .ACTION_PAUSE_TRACKING
+        }
+
+        ContextCompat.startForegroundService(
+            context,
+            intent
+        )
+    }
+    fun resumeTracking(context: Context) {
+
+        val intent = Intent(
+            context,
+            LocationTrackingService::class.java
+        ).apply {
+            action =
+                LocationTrackingService
+                    .ACTION_RESUME_TRACKING
+        }
+
+        ContextCompat.startForegroundService(
+            context,
+            intent
+        )
+    }
     fun startTracking(context: Context) {
 
         Log.d("ViewModel ","Start Location is clicked")

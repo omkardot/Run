@@ -44,7 +44,8 @@ class RunningTrackerEngine(
     private var totalDistanceMeters = 0.0
 
     private var startTimeMillis: Long? = null
-
+    private var pausedAtMillis: Long? = null
+    private var totalPausedMillis = 0L
     private val routePoints =
         mutableListOf<RoutePoint>()
 
@@ -57,14 +58,63 @@ class RunningTrackerEngine(
             SystemClock.elapsedRealtime()
 
         routePoints.clear()
+        pausedAtMillis = null
+        totalPausedMillis = 0L
+        locationFilter.reset()
+    }
+    fun stop() {
+
+        previousLocation = null
+
+        totalDistanceMeters = 0.0
+
+        startTimeMillis = null
+
+        pausedAtMillis = null
+
+        totalPausedMillis = 0L
+
+        routePoints.clear()
 
         locationFilter.reset()
     }
+    fun pause(): RunningState {
 
+        if (startTimeMillis == null) {
+            start()
+        }
+
+        if (pausedAtMillis == null) {
+            pausedAtMillis =
+                SystemClock.elapsedRealtime()
+        }
+
+        return getCurrentState()
+    }
+    fun resume(): RunningState {
+
+        val pausedAt = pausedAtMillis
+        if (pausedAt != null) {
+            totalPausedMillis +=
+                SystemClock.elapsedRealtime() - pausedAt
+        }
+
+        pausedAtMillis = null
+
+        // Don't calculate distance
+        // across the pause period.
+        previousLocation = null
+
+        locationFilter.reset()
+
+        return getCurrentState()
+    }
     fun processLocation(
         location: LocationData
     ): RunningState? {
-
+        if (pausedAtMillis != null) {
+            return null
+        }
         // Reject bad GPS
         if (!locationFilter.accept(location)) {
             return null
@@ -121,25 +171,49 @@ class RunningTrackerEngine(
     }
 
     private fun createRunningState(
-        location: LocationData
+        location: LocationData?
     ): RunningState {
 
         val elapsedTimeMillis =
-            SystemClock.elapsedRealtime() -
-                    (startTimeMillis
-                        ?: SystemClock.elapsedRealtime())
-        val pace = calculatePace(
-            distanceMeters = totalDistanceMeters,
-            elapsedTimeMillis = elapsedTimeMillis
-        )
+            getElapsedTime()
+        val pace = if (location != null) {
+            calculatePace(
+                distanceMeters = totalDistanceMeters,
+                elapsedTimeMillis = elapsedTimeMillis
+            )
+        } else null
+
         return RunningState(
-            isTracking = true,
+            isTracking = startTimeMillis != null,
             currentLocation = location,
             distanceMeters = totalDistanceMeters,
             elapsedTimeMillis = elapsedTimeMillis,
             paceSecondsPerKm = pace,
+            isPaused = pausedAtMillis != null,
             routePoints = routePoints.toList()
         )
+    }
+    fun getCurrentState(): RunningState {
+        return createRunningState(previousLocation)
+    }
+    private fun getElapsedTime(): Long {
+
+        val start =
+            startTimeMillis
+                ?: return 0L
+
+        val now =
+            SystemClock.elapsedRealtime()
+
+        val currentPauseDuration =
+            pausedAtMillis?.let {
+                now - it
+            } ?: 0L
+
+        return now -
+                start -
+                totalPausedMillis -
+                currentPauseDuration
     }
     private fun calculatePace(
         distanceMeters: Double,

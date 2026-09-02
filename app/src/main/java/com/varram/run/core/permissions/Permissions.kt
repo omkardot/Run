@@ -8,6 +8,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import android.content.pm.PackageManager
+import android.util.Log
 
 @Composable
 fun RequestLocationPermission(
@@ -27,7 +28,7 @@ fun RequestLocationPermission(
             // Handle permission denied state
         }
     }
-
+   
     LaunchedEffect(Unit) {
         val hasFine = ContextCompat.checkSelfPermission(
             context,
