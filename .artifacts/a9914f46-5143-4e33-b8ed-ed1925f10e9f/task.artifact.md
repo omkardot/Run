@@ -1,0 +1,4 @@
+- [ ] Update `RunningRepository.kt` to handle `isTracking` state
+- [ ] Standardize action strings in `LocationTrackingService.kt`
+- [ ] Verify `RunningTrackerViewModel.kt` handles intents correctly
+- [ ] Verify `MainScreen.kt` UI updates correctly
