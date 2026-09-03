@@ -23,7 +23,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        enableEdgeToEdge()
 
         val repository =
             (application as RunningTrackerApplication)
@@ -79,36 +78,6 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-    private fun hasLocationPermission(): Boolean {
-        val fine = ContextCompat.checkSelfPermission(
-            this,
-            Manifest.permission.ACCESS_FINE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
 
-        val coarse = ContextCompat.checkSelfPermission(
-            this,
-            Manifest.permission.ACCESS_COARSE_LOCATION
-        ) == PackageManager.PERMISSION_GRANTED
-
-        return fine || coarse
-    }
-
-// Inside your Service start/tracking method:
-
-    private fun startLocationTrackingService() {
-
-        val intent = Intent(
-            this,
-            LocationTrackingService::class.java
-        ).apply {
-            action =
-                LocationTrackingService.ACTION_START_TRACKING
-        }
-
-        ContextCompat.startForegroundService(
-            this,
-            intent
-        )
-    }
 }
 
