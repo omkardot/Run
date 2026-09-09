@@ -2,6 +2,7 @@ package com.varram.run.navigation.mainScreen
 
 import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
 import android.os.Build
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -12,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
@@ -87,10 +89,19 @@ fun MainScreen(
                     lastSessionDate = "Yesterday, 06:30 AM",
                     onStartRunClick = {
                         if (!uiState.isTracking) {
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                notificationPermissionLauncher.launch(
+                            val hasNotificationPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                ContextCompat.checkSelfPermission(
+                                    context,
                                     Manifest.permission.POST_NOTIFICATIONS
-                                )
+                                ) == PackageManager.PERMISSION_GRANTED
+                            } else {
+                                true // Not required below API 33
+                            }
+                            if (hasNotificationPermission) {
+                                viewModel.startTracking(context)
+                            } else {
+                                // Request permission on API 33+ (including SDK 36)
+                                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                             }
                             viewModel.startTracking(context)
                         }
