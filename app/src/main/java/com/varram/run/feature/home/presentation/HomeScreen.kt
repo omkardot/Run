@@ -1,5 +1,6 @@
 package com.varram.run.feature.home.presentation
 
+import android.util.Printer
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.runtime.Composable
@@ -36,7 +37,6 @@ import androidx.compose.material.icons.filled.DirectionsRun
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.ripple.R
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -51,12 +51,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import com.varram.run.R
 import com.varram.run.data.local.entity.RunStatus
 import com.varram.run.data.model.RoutePoint
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
@@ -67,7 +69,7 @@ import org.osmdroid.views.overlay.Polyline
 
 @Composable
 fun HomeScreen(
-    weeklyDistanceKm: Double = 34.2,
+    weeklyDistanceKm: Double,
     weeklyGoalKm: Double = 50.0,
     lastSessionDistanceKm: Double = 5.2,
     lastSessionTime: String = "28:45",
@@ -104,9 +106,8 @@ fun HomeScreen(
                             shape = RoundedCornerShape(4.dp)
                         ) {
                             Icon(
-                                imageVector = Icons.Default.DirectionsRun,
+                                painter = painterResource(id = R.drawable.run_logo),
                                 contentDescription = null,
-                                tint = Color(0xFFCCFF00),
                                 modifier = Modifier.padding(4.dp)
                             )
                         }
@@ -118,12 +119,6 @@ fun HomeScreen(
                             color = Color.White
                         )
                     }
-
-                    Box(
-                        modifier = Modifier
-                            .size(24.dp)
-                            .background(Color.White, CircleShape)
-                    )
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -156,7 +151,7 @@ fun HomeScreen(
                 }
 
                 // Progress Bar
-                val progress = (weeklyDistanceKm / weeklyGoalKm).toFloat().coerceIn(0f, 1f)
+                val progress = (weeklyDistanceKm.toDouble() / weeklyGoalKm).toFloat().coerceIn(0f, 1f)
                 LinearProgressIndicator(
                     progress = { progress },
                     modifier = Modifier

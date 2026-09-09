@@ -7,10 +7,12 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.varram.run.data.local.entity.RunEntity
 import com.varram.run.data.local.entity.RunStatus
 import com.varram.run.data.repository.RunningRepository
 import com.varram.run.feature.history.presentation.HistoryViewModel
 import com.varram.run.service.LocationTrackingService
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
@@ -44,6 +46,22 @@ class RunningTrackerViewModel(
                 initialValue = RunningTrackerUiState()
             )
 
+
+    val totalDistanceKm: StateFlow<Double> = repository.getCompletedRuns()
+        .map { runs -> runs.sumOf { it.distanceMeters } / 1000.0 }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = 0.0
+        )
+
+    val lastRun: StateFlow<RunEntity?> = repository.getCompletedRuns()
+        .map { runs -> runs.lastOrNull() }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = null
+        )
     fun stopTracking(context: Context) {
         Log.d("ViewModel ","Stop Location is clicked")
         val intent = Intent(

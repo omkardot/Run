@@ -35,6 +35,13 @@ import com.varram.run.feature.home.presentation.ActiveRunScreen
 import com.varram.run.feature.home.presentation.HomeScreen
 import com.varram.run.feature.home.presentation.RunningTrackerViewModel
 import com.varram.run.feature.summary.presentation.RunSummaryScreen
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlin.math.absoluteValue
+import kotlin.math.round
+import kotlin.math.roundToInt
+import androidx.compose.runtime.collectAsState
+import com.varram.run.feature.history.presentation.formatDate
 
 @Composable
 fun MainScreen(
@@ -64,13 +71,6 @@ fun MainScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Scaffold(
-//        bottomBar = {
-//            if (showBottomBar) {
-//                AppNavigationBar(
-//                    navController = navController
-//                )
-//            }
-//        }
     ) { innerPadding ->
 
         NavHost(
@@ -80,13 +80,16 @@ fun MainScreen(
         ) {
 
             composable(BottomNavItem.Home.route) {
+                val totalDistance by viewModel.totalDistanceKm.collectAsStateWithLifecycle()
+                val rounded = round(totalDistance * 10) / 10
+                val lastRunState by viewModel.lastRun.collectAsStateWithLifecycle()
                 HomeScreen(
-                    weeklyDistanceKm = 34.2,
+                    weeklyDistanceKm = rounded,
                     weeklyGoalKm = 50.0,
-                    lastSessionDistanceKm = 5.2,
-                    lastSessionTime = "28:45",
-                    lastSessionPace = "5:31",
-                    lastSessionDate = "Yesterday, 06:30 AM",
+                    lastSessionDistanceKm = (round(lastRunState?.distanceMeters ?: (0.0 * 10)) / 10),
+                    lastSessionTime = formatDuration(lastRunState?.durationMillis?:0L),
+                    lastSessionPace = formatPace(lastRunState?.avgPaceSecondsPerKm?:0.0),
+                    lastSessionDate = formatDate(lastRunState?.startTime?: System.currentTimeMillis()),
                     onStartRunClick = {
                         if (!uiState.isTracking) {
                             val hasNotificationPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -111,37 +114,6 @@ fun MainScreen(
                         navController.navigate(BottomNavItem.History.route)
                     }
                 )
-
-//                RunningTrackerDebugScreen(
-//                    latitude = uiState.latitude,
-//                    longitude = uiState.longitude,
-//                    accuracy = uiState.accuracy,
-//                    isTracking = uiState.isTracking,
-//                    routePoints = uiState.routePoints,
-//                    distance = uiState.distanceMeters,
-//                    paceperSec = uiState.paceSecondsPerKm,
-//                    isPaused = uiState.isPaused,
-//                    onTogglePause = {
-//                        if (uiState.isPaused) {
-//                            viewModel.resumeTracking(context)
-//                        } else {
-//                            viewModel.pauseTracking(context)
-//                        }
-//                    },
-//
-//                    onToggleTracking = {
-//                        if (!uiState.isTracking) {
-//                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-//                                notificationPermissionLauncher.launch(
-//                                    Manifest.permission.POST_NOTIFICATIONS
-//                                )
-//                            }
-//                            viewModel.startTracking(context)
-//                        } else {
-//                            viewModel.stopTracking(context)
-//                        }
-//                    }
-//                )
             }
             composable("active_run") {
                 ActiveRunScreen(
