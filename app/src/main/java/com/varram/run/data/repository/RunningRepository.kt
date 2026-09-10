@@ -78,6 +78,9 @@ class RunningRepository(
     fun getCompletedRuns(): Flow<List<RunEntity>> {
         return runDao.getRunsByStatus(RunStatus.COMPLETED)
     }
+    fun getLastCompletedRun(): Flow<List<RunEntity>> {
+        return runDao.getRunByStatus(RunStatus.COMPLETED)
+    }
 
     suspend fun saveLocation(
         location: LocationData

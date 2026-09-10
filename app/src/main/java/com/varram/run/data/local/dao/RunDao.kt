@@ -63,4 +63,10 @@ interface RunDao {
     fun getRunsByStatus(
         status: RunStatus = RunStatus.COMPLETED
     ): Flow<List<RunEntity>>
+
+
+    @Query("""SELECT * FROM runs WHERE status = :status ORDER BY startTime DESC LIMIT 1""")
+    fun getRunByStatus(
+        status: RunStatus = RunStatus.COMPLETED
+    ): Flow<List<RunEntity>>
 }

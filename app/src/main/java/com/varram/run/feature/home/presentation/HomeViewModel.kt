@@ -55,7 +55,7 @@ class RunningTrackerViewModel(
             initialValue = 0.0
         )
 
-    val lastRun: StateFlow<RunEntity?> = repository.getCompletedRuns()
+    val lastRun: StateFlow<RunEntity?> = repository.getLastCompletedRun()
         .map { runs -> runs.lastOrNull() }
         .stateIn(
             scope = viewModelScope,

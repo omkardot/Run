@@ -86,7 +86,7 @@ fun MainScreen(
                 HomeScreen(
                     weeklyDistanceKm = rounded,
                     weeklyGoalKm = 50.0,
-                    lastSessionDistanceKm = (round(lastRunState?.distanceMeters ?: (0.0 * 10)) / 10),
+                    lastSessionDistanceKm = round(((lastRunState?.distanceMeters ?: 0.0) / 1000.0) * 10.0) / 10.0 ,
                     lastSessionTime = formatDuration(lastRunState?.durationMillis?:0L),
                     lastSessionPace = formatPace(lastRunState?.avgPaceSecondsPerKm?:0.0),
                     lastSessionDate = formatDate(lastRunState?.startTime?: System.currentTimeMillis()),
